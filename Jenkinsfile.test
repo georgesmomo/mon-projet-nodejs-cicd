@@ -1,0 +1,25 @@
+// Fichier: Jenkinsfile.test
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git credentialsId: 'github-token', url: 'https://github.com/georgesmomo/node-express-hello-world.git', branch: 'master'
+            }
+        }
+
+        stage('Run End-to-End Tests') {
+            steps {
+                script {
+                    echo "Lancement des tests d'interface avec Selenium..."
+                    // On suppose que python3 et pip sont installés sur l'agent Jenkins
+                    // Installe la librairie selenium
+                    sh "pip3 install selenium"
+                    // Exécute le script de test
+                    sh "python3 test_app.py"
+                }
+            }
+        }
+    }
+}
