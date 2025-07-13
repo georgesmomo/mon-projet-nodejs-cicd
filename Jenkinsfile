@@ -114,7 +114,7 @@ pipeline {
     stage('Trigger CD') {
         steps {
             script {
-                // Nous avons besoin de credentials pour pousser vers le dépôt de configuration
+                // Nous avons besoin de credentials pour pousser vers le dépôt de configuration !!
                 withCredentials() {
                     
                     // Cloner le dépôt de configuration
