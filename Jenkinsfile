@@ -110,7 +110,7 @@ pipeline {
         }
     }
 
-    //... après le stage 'Publish Artifact'
+    //... après le stage 'Publish Artifact!'
     stage('Trigger CD') {
         steps {
             script {
