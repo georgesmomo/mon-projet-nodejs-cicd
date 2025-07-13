@@ -127,9 +127,9 @@ pipeline {
                 cleanWs()
 
                 // Nettoyage Docker si nécessaire
-                sh "docker container prune -f || true"
-                sh "docker image prune -f || true"
-                sh "docker volume prune -f || true"
+                //sh "docker container prune -f || true"
+                //sh "docker image prune -f || true"
+                //sh "docker volume prune -f || true"
             }
         }
     }
