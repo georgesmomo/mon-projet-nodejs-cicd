@@ -16,22 +16,31 @@ pipeline {
             }
         }
         // D'autres étapes viendront s'ajouter ici.
-    stage('Unit Tests') {
-        agent {
-            docker {
-                image 'node:18-slim'
+        stage('Unit Tests') {
+            agent {
+                docker {
+                    image 'node:18-slim'
+                }
+            }
+            environment {
+                // Répertoire local pour le cache npm (évite les erreurs de permission)
+                npm_config_cache = "${env.WORKSPACE}/.npm"
+            }
+            steps {
+                script {
+                    // Nettoyage avant installation
+                    sh 'rm -rf node_modules package-lock.json'
+                    sh 'mkdir -p $npm_config_cache'
+
+                    // Installation des dépendances
+                    sh 'npm install --prefer-offline --no-audit'
+
+                    // Exécution des tests avec options pour debug
+                    sh 'npm test -- --detectOpenHandles --verbose'
+                }
             }
         }
-        environment {
-            npm_config_cache = "${env.WORKSPACE}/.npm"
-        }
-        steps {
-            sh 'rm -rf node_modules package-lock.json'
-            sh 'mkdir -p $npm_config_cache'
-            sh 'npm install --prefer-offline --no-audit'
-            sh 'npm test'
-        }
-    }
+
 
     stage('SonarQube Analysis & Quality Gate') {
         steps {
