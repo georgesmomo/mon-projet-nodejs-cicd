@@ -18,15 +18,17 @@ pipeline {
         // D'autres étapes viendront s'ajouter ici.
     stage('Unit Tests') {
         agent {
-            // Utiliser un conteneur Docker pour fournir un environnement Node.js propre
-            docker { image 'node:18-slim' }
+            docker {
+                image 'node:18-slim'
+            }
         }
         environment {
             npm_config_cache = "${env.WORKSPACE}/.npm"
         }
         steps {
+            sh 'rm -rf node_modules package-lock.json'
             sh 'mkdir -p $npm_config_cache'
-            sh 'npm install'
+            sh 'npm install --prefer-offline --no-audit'
             sh 'npm test'
         }
     }
