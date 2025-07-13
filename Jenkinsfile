@@ -117,4 +117,20 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            script {
+                echo "Nettoyage automatique (post build)..."
+
+                // Nettoyer le workspace Jenkins
+                cleanWs()
+
+                // Nettoyage Docker si nécessaire
+                sh "docker container prune -f || true"
+                sh "docker image prune -f || true"
+                sh "docker volume prune -f || true"
+            }
+        }
+    }
 }
