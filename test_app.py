@@ -33,7 +33,7 @@ try:
     time.sleep(2)
     
     # Vérifier le titre de la page
-    expected_title = "Express - Hello World"
+    expected_title = "Ingénieur DevOps Georges MOMO"
     actual_title = driver.title
     print(f"Titre attendu: '{expected_title}'")
     print(f"Titre obtenu: '{actual_title}'")
@@ -41,7 +41,7 @@ try:
     print("✅ Test du titre : SUCCÈS")
     
     # Vérifier le contenu d'un élément
-    expected_text = "Heyyo"
+    expected_text = "MOMO"
     element = driver.find_element(By.TAG_NAME, 'h1')
     actual_text = element.text
     print(f"Texte attendu dans H1: '{expected_text}'")
