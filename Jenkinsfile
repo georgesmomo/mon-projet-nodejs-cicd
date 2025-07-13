@@ -77,13 +77,15 @@ pipeline {
     //... après le stage 'Build & Scan Image'
     stage('Publish Artifact') {
         steps {
-            withVault(
-                vaultSecrets:, 
-                    ],
-                , 
-                    ],
+            withVault([
+                vaultSecrets: [
+                    [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
+                        [envVar: 'DB_USER', vaultKey: 'username'],
+                        [envVar: 'DB_PASS', vaultKey: 'password']
+                    ]]
+                ],
                 vaultCredentialId: 'vault-approle-creds'
-            ) {
+            ]){
                 script {
                     // --- Pousser vers JFrog Artifactory ---
                     def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')}"
