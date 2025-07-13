@@ -1,121 +1,147 @@
-// Fichier: Jenkinsfile
-
 pipeline {
-    // Fait tourner le pipeline sur n'importe quel agent Jenkins disponible
-    agent any
+    agent any // Nous allons affiner cela. Pour l'instant, n'importe quel agent disponible fera l'affaire.
 
-    // Variables d'environnement utilisées dans le pipeline
     environment {
-        // L'URL de ton SonarQube (à adapter si besoin)
-        SONARQUBE_URL = 'http://167.86.118.59:32771/' 
-        // L'URL de ton registry Docker JFrog
-        JFROG_REGISTRY = 'trial29h9yf.jfrog.io'
-        // Le nom de ton dépôt Docker dans JFrog (doit exister)
-        JFROG_DOCKER_REPO = 'docker-trial' 
-        // Le nom de notre image Docker
-        IMAGE_NAME = "node-express-hello-world"
+        // Variables d'environnement non secrètes
+        REGISTRY_URL_NEXUS = '167.86.118.59:32772'
+        REGISTRY_URL_JFROG = 'trial29h9yf.jfrog.io'
+        APP_NAME = 'node-hello-world'
     }
 
     stages {
-        // =================================================================
-        // PHASE 1 : Intégration Continue (CI)
-        // =================================================================
-
-        stage('1. Checkout Code') {
+        stage('Checkout') {
             steps {
-                script {
-                    echo 'Récupération du code depuis GitHub...'
-                    // Utilise le credential 'github-token' pour se connecter
-                    git credentialsId: 'github-token', url: 'https://github.com/georgesmomo/node-express-hello-world.git', branch: 'master'
-                }
+                // Cette étape récupère le code source depuis le SCM (Source Control Management) configuré dans le job Jenkins.
+                checkout scm
             }
         }
+        // D'autres étapes viendront s'ajouter ici.
+    stage('Unit Tests') {
+        agent {
+            // Utiliser un conteneur Docker pour fournir un environnement Node.js propre
+            docker { image 'node:18-slim' }
+        }
+        steps {
+            sh 'npm install'
+            sh 'npm test'
+        }
+    }
 
-        stage('2. SonarQube Code Analysis') {
-            steps {
+    stage('SonarQube Analysis & Quality Gate') {
+        steps {
+            // Le nom 'MySonarQubeServer' doit correspondre à celui configuré dans Administrer Jenkins -> System
+            withSonarQubeEnv('MySonarQubeServer') {
                 script {
-                    echo 'Analyse du code avec SonarQube...'
-                    // Prépare l'environnement SonarQube avec le token
-                    withSonarQubeEnv(credentialsId: 'sonarqube-token') {
-                        // Utilise l'outil 'SonarScanner-latest' qu'on a configuré dans Jenkins
-                        def sonarScanner = tool 'SonarScanner'
-                        // Lance l'analyse
-                        sh "${sonarScanner}/bin/sonar-scanner -Dsonar.projectKey=node-express-hello-world -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_URL}"
+                    // Le nom 'MySonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
+                    def scannerHome = tool 'MySonarScanner'
+                    // Récupération du token depuis Vault
+                    withVault(
+                        vaultSecrets:],
+                        vaultCredentialId: 'vault-approle-creds'
+                    ) {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+            // Mettre en pause le pipeline en attendant le résultat de la Quality Gate
+            timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+            }
+        }
+    }
+    //... après le stage 'SonarQube Analysis'
+    stage('Build & Scan Image') {
+        steps {
+            script {
+                // Installation de Trivy si nécessaire (peut être pré-installé sur l'agent)
+                 sh 'sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release'
+                 sh 'wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -'
+                 sh 'echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list'
+                 sh 'sudo apt-get update && sudo apt-get install -y trivy'
+
+                def shortCommit = env.GIT_COMMIT.take(7)
+                // Pour une build sur la branche 'develop'
+                def imageTag = "1.0.0-develop.${env.BUILD_NUMBER}.${shortCommit}"
+                
+                // Stocker dans l'environnement pour les étapes suivantes
+                env.IMAGE_FULL_NAME = "${env.APP_NAME}:${imageTag}"
+
+                // Construire l'image Docker
+                docker.build(env.IMAGE_FULL_NAME, ".")
+
+                // Scanner l'image avec Trivy. --exit-code 1 fait échouer le build si des vulnérabilités sont trouvées.
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_FULL_NAME}"
+            }
+        }
+    }
+    //... après le stage 'Build & Scan Image'
+    stage('Publish Artifact') {
+        steps {
+            withVault([
+                vaultSecrets: [
+                    [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
+                        [envVar: 'DB_USER', vaultKey: 'username'],
+                        [envVar: 'DB_PASS', vaultKey: 'password']
+                    ]]
+                ],
+                vaultCredentialId: 'vault-approle-creds'
+            ]){
+                script {
+                    // --- Pousser vers JFrog Artifactory ---
+                    def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')}"
+                    docker.withRegistry("https://${env.REGISTRY_URL_JFROG}", "jfrog-creds") { // 'jfrog-creds' doit être un credential Jenkins de type Username/Password
+                        sh "docker tag ${env.IMAGE_FULL_NAME} ${jfrogImageName}"
+                        sh "docker push ${jfrogImageName}"
+                    }
+
+                    // --- Pousser vers Nexus ---
+                    // docker.withRegistry est la méthode préférée. Elle nécessite un credential Jenkins.
+                    // Nous allons créer un credential 'nexus-creds' dans Jenkins qui utilise les variables de Vault.
+                    // Alternativement, on peut utiliser docker login en shell.
+                    def nexusImageName = "${env.REGISTRY_URL_NEXUS}/${env.IMAGE_FULL_NAME}"
+                    withCredentials() {
+                        sh "echo ${env.NEXUS_PASS_CRED} | docker login ${env.REGISTRY_URL_NEXUS} -u ${env.NEXUS_USER_CRED} --password-stdin"
+                        sh "docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}"
+                        sh "docker push ${nexusImageName}"
+                        sh "docker logout ${env.REGISTRY_URL_NEXUS}"
                     }
                 }
             }
         }
+    }
 
-        stage('3. Build Docker Image') {
-            steps {
-                script {
-                    echo "Construction de l'image Docker..."
-                    // Construit l'image et la tague avec le numéro de build Jenkins (ex: hello-world-app:1)
-                    sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-                }
-            }
-        }
-
-        // =================================================================
-        // PHASE 2 : Déploiement Continu (CD)
-        // =================================================================
-        
-        stage('4. Push Image to JFrog Artifactory') {
-            steps {
-                script {
-                    echo "Envoi de l'image vers JFrog Artifactory..."
+    //... après le stage 'Publish Artifact'
+    stage('Trigger CD') {
+        steps {
+            script {
+                // Nous avons besoin de credentials pour pousser vers le dépôt de configuration
+                withCredentials() {
                     
-                    // On se connecte à JFrog en utilisant les identifiants stockés
-                    withCredentials([usernamePassword(credentialsId: 'jfrog-credentials', usernameVariable: 'JFROG_USER', passwordVariable: 'JFROG_PASS')]) {
-                        sh "docker login -u ${JFROG_USER} -p ${JFROG_PASS} ${JFROG_REGISTRY}"
+                    // Cloner le dépôt de configuration
+                    sh "git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/mon-projet-k8s-config.git"
+                    
+                    // Se déplacer dans le dépôt cloné
+                    dir('mon-projet-k8s-config') {
+                        // Configurer git
+                        sh "git config user.name 'georgesmomo'"
+                        sh "git config user.email 'jenkins@example.com'"
+
+                        // Installer yq si nécessaire
+                        sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O./yq && chmod +x./yq"
+
+                        // Mettre à jour la tag de l'image dans values.yaml
+                        sh "./yq e '.image.tag = \"${env.IMAGE_FULL_NAME.split(':')}\"' -i my-chart/values.yaml"
+                        
+                        // Commiter et pousser les changements
+                        sh "git add my-chart/values.yaml"
+                        sh "git commit -m 'ci: Update image tag to ${env.IMAGE_FULL_NAME.split(':')}'"
+                        sh "git push"
                     }
-                    
-                    // On tague l'image avec le nom complet du registry pour savoir où la pousser
-                    def fullImageName = "${JFROG_REGISTRY}/${JFROG_DOCKER_REPO}/${IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${fullImageName}"
-
-                    // On pousse l'image
-                    sh "docker push ${fullImageName}"
-
-                    // On se déconnecte pour ne pas laisser de session ouverte
-                    sh "docker logout ${JFROG_REGISTRY}"
                 }
             }
         }
+    }
 
-        stage('5. JFrog Xray Scan') {
-            steps {
-                echo "L'analyse de sécurité Xray est déclenchée automatiquement par JFrog."
-                echo "Consulte l'interface JFrog pour voir les résultats."
-                // Note : Pour une intégration avancée, on utiliserait le plugin JFrog pour attendre le résultat du scan.
-            }
-        }
-
-        stage('6. Deploy to Production VPS') {
-            steps {
-                script {
-                    echo "Déploiement de l'application sur le VPS..."
-                    def fullImageName = "${JFROG_REGISTRY}/${JFROG_DOCKER_REPO}/${IMAGE_NAME}:${BUILD_NUMBER}"
-                    
-                    // Connexion à JFrog pour pouvoir tirer l'image
-                    withCredentials([usernamePassword(credentialsId: 'jfrog-credentials', usernameVariable: 'JFROG_USER', passwordVariable: 'JFROG_PASS')]) {
-                        sh "docker login -u ${JFROG_USER} -p ${JFROG_PASS} ${JFROG_REGISTRY}"
-                    }
-
-                    // Arrête et supprime l'ancien conteneur s'il existe (le '|| true' évite une erreur si le conteneur n'existe pas)
-                    sh "docker stop node-express-hello-world || true"
-                    sh "docker rm node-express-hello-world || true"
-                    
-                    // Tire la nouvelle image depuis JFrog
-                    sh "docker pull ${fullImageName}"
-
-                    // Lance le nouveau conteneur
-                    sh "docker run -d --name node-express-hello-world -p 3000:3000 ${fullImageName}"
-
-                    sh "docker logout ${JFROG_REGISTRY}"
-                }
-            }
-        }
     }
 
     post {
@@ -133,4 +159,5 @@ pipeline {
             }
         }
     }
+    
 }
