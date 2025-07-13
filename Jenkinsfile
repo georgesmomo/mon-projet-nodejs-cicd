@@ -74,41 +74,7 @@ pipeline {
             }
         }
     }
-    //... après le stage 'Build & Scan Image'
-    stage('Publish Artifact') {
-        steps {
-            withVault([
-                vaultSecrets: [
-                    [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
-                        [envVar: 'DB_USER', vaultKey: 'username'],
-                        [envVar: 'DB_PASS', vaultKey: 'password']
-                    ]]
-                ],
-                vaultCredentialId: 'vault-approle-creds'
-            ]){
-                script {
-                    // --- Pousser vers JFrog Artifactory ---
-                    def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')}"
-                    docker.withRegistry("https://${env.REGISTRY_URL_JFROG}", "jfrog-creds") { // 'jfrog-creds' doit être un credential Jenkins de type Username/Password
-                        sh "docker tag ${env.IMAGE_FULL_NAME} ${jfrogImageName}"
-                        sh "docker push ${jfrogImageName}"
-                    }
 
-                    // --- Pousser vers Nexus ---
-                    // docker.withRegistry est la méthode préférée. Elle nécessite un credential Jenkins.
-                    // Nous allons créer un credential 'nexus-creds' dans Jenkins qui utilise les variables de Vault.
-                    // Alternativement, on peut utiliser docker login en shell.
-                    def nexusImageName = "${env.REGISTRY_URL_NEXUS}/${env.IMAGE_FULL_NAME}"
-                    withCredentials() {
-                        sh "echo ${env.NEXUS_PASS_CRED} | docker login ${env.REGISTRY_URL_NEXUS} -u ${env.NEXUS_USER_CRED} --password-stdin"
-                        sh "docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}"
-                        sh "docker push ${nexusImageName}"
-                        sh "docker logout ${env.REGISTRY_URL_NEXUS}"
-                    }
-                }
-            }
-        }
-    }
 
     //... après le stage 'Publish Artifact!'
     stage('Trigger CD') {
