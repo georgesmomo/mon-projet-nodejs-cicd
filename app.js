@@ -1,16 +1,17 @@
-var express=require('express');
-var app=express();
+const express = require('express');
+const app = express();
 
-var routes=require('./routes/route.js');
+const routes = require('./routes/route.js');
 
-app.set('view engine','ejs');
-
+app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 
-app.get('/',routes.home);
+app.get('/', routes.home);
 
-var port = process.env.PORT || 3000;
+// `port` peut changer en fonction de l'environnement ⇒ `const` est ok car assigné une fois
+const port = process.env.PORT || 3000;
 
-var server=app.listen(port,function(req,res){
-    console.log("Catch the action at http://localhost:"+port);
+// `server` peut être utile plus tard (ex: pour tests), mais pas modifié ⇒ `const`
+const server = app.listen(port, function () {
+    console.log("Catch the action at http://localhost:" + port);
 });
