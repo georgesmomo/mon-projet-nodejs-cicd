@@ -121,7 +121,7 @@ pipeline {
     post {
         always {
             script {
-                echo "Nettoyage automatique (post build)...!"
+                echo "Nettoyage automatique (post build)...!!"
 
                 // Nettoyer le workspace Jenkins
                 cleanWs()
