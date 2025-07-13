@@ -21,7 +21,11 @@ pipeline {
             // Utiliser un conteneur Docker pour fournir un environnement Node.js propre
             docker { image 'node:18-slim' }
         }
+        environment {
+            npm_config_cache = "${env.WORKSPACE}/.npm"
+        }
         steps {
+            sh 'mkdir -p $npm_config_cache'
             sh 'npm install'
             sh 'npm test'
         }
