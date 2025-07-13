@@ -34,11 +34,15 @@ pipeline {
                 script {
                     // Le nom 'MySonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
                     def scannerHome = tool 'MySonarScanner'
-                    // Récupération du token depuis Vault
-                    withVault(
-                        vaultSecrets:],
+                    withVault([
+                        vaultSecrets: [
+                            [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
+                                [envVar: 'MY_SECRET_USERNAME', vaultKey: 'username'],
+                                [envVar: 'MY_SECRET_PASSWORD', vaultKey: 'password']
+                            ]]
+                        ],
                         vaultCredentialId: 'vault-approle-creds'
-                    ) {
+                    ]){
                         sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
