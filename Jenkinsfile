@@ -153,13 +153,14 @@ stage('Trigger CD') {
                 usernamePassword(credentialsId: 'GITHUB_CREDENTIALS_DEVOPS', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')
             ]) {
 
+                echo "Git url: https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/mon-projet-k8s-config.git"
                 // Cloner le dépôt de configuration
                 sh "git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/mon-projet-k8s-config.git"
 
                 dir('mon-projet-k8s-config') {
                     // Configurer git
                     sh "git config user.name 'georgesmomo'"
-                    sh "git config user.email 'jenkins@example.com'"
+                    sh "git config user.email 'georges.momo@gmail.com'"
 
                     // Télécharger yq si nécessaire
                     sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq"
