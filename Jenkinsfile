@@ -203,6 +203,23 @@ stage('Trigger CD') {
 }
 
 
+    stage('E2E Tests') {
+        agent {
+            // Un agent avec Python et les dépendances Selenium
+            docker { image 'python:3.9-slim' }
+        }
+        steps {
+            script {
+                // Installer les dépendances Selenium
+                sh 'pip install selenium'
+
+                // Exécuter le script de test
+                // Il faut récupérer le script depuis le dépôt
+                checkout scm
+                sh 'python e2e_test.py'
+            }
+        }
+    }
     }
 
     post {
