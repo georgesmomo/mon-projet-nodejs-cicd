@@ -47,8 +47,8 @@ pipeline {
             // Le nom 'MySonarQubeServer' doit correspondre à celui configuré dans Administrer Jenkins -> System
             withSonarQubeEnv('MySonarQubeServer') {
                 script {
-                    // Le nom 'MySonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
-                    def scannerHome = tool 'MySonarScanner'
+                    // Le nom 'SonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
+                    def scannerHome = tool 'SonarScanner'
                     withVault([
                         vaultSecrets: [
                             [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
