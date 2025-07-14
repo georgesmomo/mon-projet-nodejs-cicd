@@ -104,11 +104,11 @@ pipeline {
                     withVault([
                         vaultSecrets: [
                             [path: 'secret/secret/devops/jfrog', engineVersion: 2, secretValues: [
-                                [envVar: 'JFROG_USER', vaultKey: 'username'],
+                                [envVar: 'JFROG_USER', vaultKey: 'user'],
                                 [envVar: 'JFROG_PASS', vaultKey: 'password']
                             ]],
                             [path: 'secret/secret/devops/nexus', engineVersion: 2, secretValues: [
-                                [envVar: 'NEXUS_USER', vaultKey: 'username'],
+                                [envVar: 'NEXUS_USER', vaultKey: 'user'],
                                 [envVar: 'NEXUS_PASS', vaultKey: 'password']
                             ]]
                         ],
