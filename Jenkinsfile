@@ -45,7 +45,7 @@ pipeline {
     stage('SonarQube Analysis & Quality Gate') {
         steps {
             // Le nom 'MySonarQubeServer' doit correspondre à celui configuré dans Administrer Jenkins -> System
-            withSonarQubeEnv('MySonarQubeServer') {
+            withSonarQubeEnv('SonarScanner') {
                 script {
                     // Le nom 'SonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
                     def scannerHome = tool 'SonarScanner'
