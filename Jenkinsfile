@@ -132,16 +132,6 @@ pipeline {
                             docker logout ${env.REGISTRY_URL_JFROG}
                         """
 
-                        // --- Nexus Registry ---
-                        def nexusImageName = "${env.REGISTRY_URL_NEXUS}/${env.IMAGE_FULL_NAME}"
-                        echo "📦 Nexus Image Name: ${nexusImageName}"
-
-                        sh """
-                            echo ${NEXUS_PASS} | docker login ${env.REGISTRY_URL_NEXUS} -u ${NEXUS_USER} --password-stdin
-                            docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}
-                            docker push ${nexusImageName}
-                            docker logout ${env.REGISTRY_URL_NEXUS}
-                        """
 
                         // --- Docker Hub ---
                         def dockerhubImageName = "${DOCKERHUB_USER}/${env.IMAGE_FULL_NAME}"
@@ -155,6 +145,18 @@ pipeline {
                         """
 
                         echo "✅ Artifact publié sur JFrog, Nexus et Docker Hub avec succès"
+
+                        // --- Nexus Registry ---
+                        def nexusImageName = "${env.REGISTRY_URL_NEXUS}/${env.IMAGE_FULL_NAME}"
+                        echo "📦 Nexus Image Name: ${nexusImageName}"
+
+                        sh """
+                            echo ${NEXUS_PASS} | docker login ${env.REGISTRY_URL_NEXUS} -u ${NEXUS_USER} --password-stdin
+                            docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}
+                            docker push ${nexusImageName}
+                            docker logout ${env.REGISTRY_URL_NEXUS}
+                        """
+
                     }
 
                 } catch (Exception e) {
