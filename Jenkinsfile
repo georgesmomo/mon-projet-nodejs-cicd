@@ -64,6 +64,7 @@ pipeline {
             }
 
             timeout(time: 1, unit: 'HOURS') {
+                //si à true, le test tombe en echec si qualitygate est pas bon
                 waitForQualityGate abortPipeline: false
             }
         }
@@ -210,7 +211,7 @@ stage('Trigger CD') {
         steps {
             script {
                 // Installer les dépendances Selenium
-                sh 'pip install selenium'
+                sh 'pip install --user selenium'
 
                 // Exécuter le script de test
                 // Il faut récupérer le script depuis le dépôt
