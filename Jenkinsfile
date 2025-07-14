@@ -44,30 +44,32 @@ pipeline {
 
     stage('SonarQube Analysis & Quality Gate') {
         steps {
-            // Le nom 'MySonarQubeServer' doit correspondre à celui configuré dans Administrer Jenkins -> System
             withSonarQubeEnv('SonarScanner') {
                 script {
-                    // Le nom 'SonarScanner' doit correspondre à celui configuré dans Administrer Jenkins -> Tools
                     def scannerHome = tool 'SonarScanner'
+
                     withVault([
                         vaultSecrets: [
-                            [path: 'secret/secret/devops/jenkins', engineVersion: 2, secretValues: [
-                                [envVar: 'MY_SECRET_USERNAME', vaultKey: 'username'],
-                                [envVar: 'MY_SECRET_PASSWORD', vaultKey: 'password']
+                            [path: 'secret/devops/sonarqube', engineVersion: 2, secretValues: [
+                                [envVar: 'SONAR_TOKEN', vaultKey: 'token']
                             ]]
                         ],
                         vaultCredentialId: 'vault-approle-creds'
-                    ]){
-                        sh "${scannerHome}/bin/sonar-scanner"
+                    ]) {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.login=${SONAR_TOKEN}
+                        """
                     }
                 }
             }
-            // Mettre en pause le pipeline en attendant le résultat de la Quality Gate
+
             timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true
             }
         }
     }
+
     //... après le stage 'SonarQube Analysis'
     stage('Build & Scan Image') {
         steps {
@@ -98,7 +100,7 @@ pipeline {
         steps {
             withVault([
                 vaultSecrets: [
-                    [path: 'secret/data/jenkins', engineVersion: 2, secretValues: [
+                    [path: 'secret/secret/devops/jenkins', engineVersion: 2, secretValues: [
                         [envVar: 'DB_USER', vaultKey: 'username'],
                         [envVar: 'DB_PASS', vaultKey: 'password']
                     ]]
