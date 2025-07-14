@@ -188,7 +188,7 @@ stage('Trigger CD') {
                     // Télécharger yq si nécessaire
                     sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq"
 
-                    // Mettre à jour le tag de l'image dans values.yaml
+                    // Mettre à jour le tag de l'image dans values.yaml !
                     def tag = env.IMAGE_FULL_NAME.split(':')[1]
                     sh "./yq e '.image.tag = \"${tag}\"' -i my-chart/values.yaml"
 
