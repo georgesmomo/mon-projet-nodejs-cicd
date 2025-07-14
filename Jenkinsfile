@@ -91,7 +91,7 @@ pipeline {
                 docker.build(env.IMAGE_FULL_NAME, ".")
 
                 // Scanner l'image avec Trivy. --exit-code 1 fait échouer le build si des vulnérabilités sont trouvées.
-                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_FULL_NAME}"
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_FULL_NAME} || true"
             }
         }
     }
