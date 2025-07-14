@@ -211,7 +211,7 @@ stage('Trigger CD') {
         steps {
             script {
                 // Installer les dépendances Selenium
-                sh 'pip install --user selenium'
+                sh 'sudo -H pip install selenium'
 
                 // Exécuter le script de test
                 // Il faut récupérer le script depuis le dépôt
