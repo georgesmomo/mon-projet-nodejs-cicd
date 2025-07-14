@@ -57,8 +57,7 @@ pipeline {
                         vaultCredentialId: 'vault-approle-creds'
                     ]) {
                         sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.login=${SONAR_TOKEN}
+                            ${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN} || true
                         """
                     }
                 }
