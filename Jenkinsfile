@@ -202,31 +202,37 @@ stage('Trigger CD') {
     }
 }
 
-    stage('E2E Tests') {
-        agent {
-            docker {
-                image 'python:3.9-slim'
-            }
-        }
-        steps {
-            script {
-                sh '''
-                    # Installer virtualenv
-                    pip install virtualenv
-
-                    # Créer un environnement virtuel
-                    virtualenv venv
-
-                    # Activer l’environnement et installer selenium
-                    . venv/bin/activate
-                    pip install selenium
-
-                    # Exécuter ton script de test
-                    python e2e_test.py
-                '''
-            }
+stage('E2E Tests') {
+    agent {
+        docker {
+            image 'python:3.9-slim'
         }
     }
+    steps {
+        script {
+            sh '''
+                # Créer un environnement virtuel local (pas besoin de pip install virtualenv)
+                python3 -m venv venv
+
+                # Activer l’environnement
+                . venv/bin/activate
+
+                # Upgrade pip dans l'environnement virtuel uniquement
+                pip install --upgrade pip
+
+                # Installer selenium localement dans le venv
+                pip install selenium
+
+                # Vérification
+                pip show selenium
+
+                # Lancer les tests E2E
+                python e2e_test.py
+            '''
+        }
+    }
+}
+
 
 
 
