@@ -51,7 +51,7 @@ pipeline {
                     def scannerHome = tool 'SonarScanner'
                     withVault([
                         vaultSecrets: [
-                            [path: 'secret/data/secret/devops/jenkins', engineVersion: 2, secretValues: [
+                            [path: 'secret/devops/jenkins', engineVersion: 2, secretValues: [
                                 [envVar: 'MY_SECRET_USERNAME', vaultKey: 'username'],
                                 [envVar: 'MY_SECRET_PASSWORD', vaultKey: 'password']
                             ]]
