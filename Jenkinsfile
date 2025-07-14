@@ -167,10 +167,10 @@ stage('Trigger CD') {
 
                     // Mettre à jour le tag de l'image dans values.yaml
                     def tag = env.IMAGE_FULL_NAME.split(':')[1]
-                    sh "./yq e '.image.tag = \"${tag}\"' -i mon-projet-k8s-config/values.yaml"
+                    sh "./yq e '.image.tag = \"${tag}\"' -i values.yaml"
 
                     // Commit et push
-                    sh "git add mon-projet-k8s-config/values.yaml"
+                    sh "git add values.yaml"
                     sh "git commit -m 'ci: Update image tag to ${tag}'"
                     sh "git push"
                 }
