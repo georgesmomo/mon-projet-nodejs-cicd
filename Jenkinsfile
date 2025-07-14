@@ -146,36 +146,38 @@ pipeline {
 
 
     //... après le stage 'Publish Artifact!'
-    stage('Trigger CD') {
-        steps {
-            script {
-                // Nous avons besoin de credentials pour pousser vers le dépôt de configuration !!
-                withCredentials() {
-                    
-                    // Cloner le dépôt de configuration
-                    sh "git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/mon-projet-k8s-config.git"
-                    
-                    // Se déplacer dans le dépôt cloné
-                    dir('mon-projet-k8s-config') {
-                        // Configurer git
-                        sh "git config user.name 'georgesmomo'"
-                        sh "git config user.email 'jenkins@example.com'"
+stage('Trigger CD') {
+    steps {
+        script {
+            withCredentials([
+                usernamePassword(credentialsId: 'GITHUB_CREDENTIALS_DEVOPS', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')
+            ]) {
 
-                        // Installer yq si nécessaire
-                        sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O./yq && chmod +x./yq"
+                // Cloner le dépôt de configuration
+                sh "git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/mon-projet-k8s-config.git"
 
-                        // Mettre à jour la tag de l'image dans values.yaml
-                        sh "./yq e '.image.tag = \"${env.IMAGE_FULL_NAME.split(':')}\"' -i my-chart/values.yaml"
-                        
-                        // Commiter et pousser les changements
-                        sh "git add my-chart/values.yaml"
-                        sh "git commit -m 'ci: Update image tag to ${env.IMAGE_FULL_NAME.split(':')}'"
-                        sh "git push"
-                    }
+                dir('mon-projet-k8s-config') {
+                    // Configurer git
+                    sh "git config user.name 'georgesmomo'"
+                    sh "git config user.email 'jenkins@example.com'"
+
+                    // Télécharger yq si nécessaire
+                    sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq"
+
+                    // Mettre à jour le tag de l'image dans values.yaml
+                    def tag = env.IMAGE_FULL_NAME.split(':')[1]
+                    sh "./yq e '.image.tag = \"${tag}\"' -i my-chart/values.yaml"
+
+                    // Commit et push
+                    sh "git add my-chart/values.yaml"
+                    sh "git commit -m 'ci: Update image tag to ${tag}'"
+                    sh "git push"
                 }
             }
         }
     }
+}
+
 
     }
 
