@@ -110,12 +110,16 @@ pipeline {
                             [path: 'secret/secret/devops/nexus', engineVersion: 2, secretValues: [
                                 [envVar: 'NEXUS_USER', vaultKey: 'user'],
                                 [envVar: 'NEXUS_PASS', vaultKey: 'password']
+                            ]],
+                            [path: 'secret/secret/devops/dockerhub', engineVersion: 2, secretValues: [
+                                [envVar: 'DOCKERHUB_USER', vaultKey: 'user'],
+                                [envVar: 'DOCKERHUB_PASS', vaultKey: 'password']
                             ]]
                         ],
                         vaultCredentialId: 'vault-approle-creds'
                     ]) {
 
-                        echo "🔐 Secrets JFrog et Nexus récupérés via Vault"
+                        echo "🔐 Secrets JFrog, Nexus et Docker Hub récupérés via Vault"
 
                         // --- JFrog Artifactory ---
                         def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')[0]}:${env.IMAGE_FULL_NAME.split(':')[1]}"
@@ -139,7 +143,18 @@ pipeline {
                             docker logout ${env.REGISTRY_URL_NEXUS}
                         """
 
-                        echo "✅ Artifact publié sur JFrog & Nexus avec succès"
+                        // --- Docker Hub ---
+                        def dockerhubImageName = "${DOCKERHUB_USER}/${env.IMAGE_FULL_NAME}"
+                        echo "📦 Docker Hub Image Name: ${dockerhubImageName}"
+
+                        sh """
+                            echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin
+                            docker tag ${env.IMAGE_FULL_NAME} ${dockerhubImageName}
+                            docker push ${dockerhubImageName}
+                            docker logout
+                        """
+
+                        echo "✅ Artifact publié sur JFrog, Nexus et Docker Hub avec succès"
                     }
 
                 } catch (Exception e) {
