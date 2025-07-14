@@ -74,11 +74,11 @@ pipeline {
     stage('Build & Scan Image') {
         steps {
             script {
-                // Installation de Trivy si nécessaire (peut être pré-installé sur l'agent)
-                 sh 'sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release'
-                 sh 'wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -'
-                 sh 'echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list'
-                 sh 'sudo apt-get update && sudo apt-get install -y trivy'
+                // Installation de Trivy si nécessaire (peut être pré-installé sur l'agent, normalement à installer via ansible par exemple)
+                // sh 'sudo apt-get update && sudo apt-get install -y wget apt-transport-https gnupg lsb-release'
+                // sh 'wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -'
+                // sh 'echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list'
+                // sh 'sudo apt-get update && sudo apt-get install -y trivy'
 
                 def shortCommit = env.GIT_COMMIT.take(7)
                 // Pour une build sur la branche 'develop'
