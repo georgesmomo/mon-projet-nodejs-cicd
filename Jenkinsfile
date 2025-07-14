@@ -160,7 +160,7 @@ stage('Trigger CD') {
                 dir('mon-projet-k8s-config') {
                     // Configurer git
                     sh "git config user.name 'georgesmomo'"
-                    sh "git config user.email 'georges.momo@gmail.com'"
+                    sh "git config user.email 'georgesmomo@users.noreply.github.com'"
 
                     // Télécharger yq si nécessaire
                     sh "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq"
