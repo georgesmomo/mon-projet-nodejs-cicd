@@ -103,35 +103,41 @@ pipeline {
                 try {
                     withVault([
                         vaultSecrets: [
-                            [path: 'secret/secret/devops/jenkins', engineVersion: 2, secretValues: [
-                                [envVar: 'DB_USER', vaultKey: 'username'],
-                                [envVar: 'DB_PASS', vaultKey: 'password']
+                            [path: 'secret/secret/devops/jfrog', engineVersion: 2, secretValues: [
+                                [envVar: 'JFROG_USER', vaultKey: 'username'],
+                                [envVar: 'JFROG_PASS', vaultKey: 'password']
+                            ]],
+                            [path: 'secret/secret/devops/nexus', engineVersion: 2, secretValues: [
+                                [envVar: 'NEXUS_USER', vaultKey: 'username'],
+                                [envVar: 'NEXUS_PASS', vaultKey: 'password']
                             ]]
                         ],
                         vaultCredentialId: 'vault-approle-creds'
                     ]) {
 
-                        echo "🔐 Secrets récupérés via Vault"
+                        echo "🔐 Secrets JFrog et Nexus récupérés via Vault"
 
                         // --- JFrog Artifactory ---
                         def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')[0]}:${env.IMAGE_FULL_NAME.split(':')[1]}"
                         echo "📦 JFrog Image Name: ${jfrogImageName}"
 
-                        docker.withRegistry("https://${env.REGISTRY_URL_JFROG}", "jfrog-creds") {
-                            sh "docker tag ${env.IMAGE_FULL_NAME} ${jfrogImageName}"
-                            sh "docker push ${jfrogImageName}"
-                        }
+                        sh """
+                            echo ${JFROG_PASS} | docker login ${env.REGISTRY_URL_JFROG} -u ${JFROG_USER} --password-stdin
+                            docker tag ${env.IMAGE_FULL_NAME} ${jfrogImageName}
+                            docker push ${jfrogImageName}
+                            docker logout ${env.REGISTRY_URL_JFROG}
+                        """
 
                         // --- Nexus Registry ---
                         def nexusImageName = "${env.REGISTRY_URL_NEXUS}/${env.IMAGE_FULL_NAME}"
                         echo "📦 Nexus Image Name: ${nexusImageName}"
 
-                        withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER_CRED', passwordVariable: 'NEXUS_PASS_CRED')]) {
-                            sh "echo ${env.NEXUS_PASS_CRED} | docker login ${env.REGISTRY_URL_NEXUS} -u ${env.NEXUS_USER_CRED} --password-stdin"
-                            sh "docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}"
-                            sh "docker push ${nexusImageName}"
-                            sh "docker logout ${env.REGISTRY_URL_NEXUS}"
-                        }
+                        sh """
+                            echo ${NEXUS_PASS} | docker login ${env.REGISTRY_URL_NEXUS} -u ${NEXUS_USER} --password-stdin
+                            docker tag ${env.IMAGE_FULL_NAME} ${nexusImageName}
+                            docker push ${nexusImageName}
+                            docker logout ${env.REGISTRY_URL_NEXUS}
+                        """
 
                         echo "✅ Artifact publié sur JFrog & Nexus avec succès"
                     }
