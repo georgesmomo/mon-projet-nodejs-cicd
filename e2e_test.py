@@ -9,7 +9,7 @@ SELENIUM_HUB_URL = "http://161.97.93.12:4444/wd/hub"
 # Pour ce test, nous supposerons qu'elle est accessible à une URL connue.
 # Dans un vrai scénario, cette URL serait dynamique.
 # Pour l'instant, nous allons modifier notre service K8s en NodePort.
-APP_URL = "http://167.86.118.59:<NodePort>" 
+APP_URL = "http://167.86.118.59:31000" 
 
 print(f"Connecting to Selenium Grid at {SELENIUM_HUB_URL}")
 print(f"Testing application at {APP_URL}")
