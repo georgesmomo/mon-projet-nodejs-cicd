@@ -50,7 +50,7 @@ pipeline {
 
                     withVault([
                         vaultSecrets: [
-                            [path: 'secret/devops/sonarqube', engineVersion: 2, secretValues: [
+                            [path: 'secret/secret/devops/sonarqube', engineVersion: 2, secretValues: [
                                 [envVar: 'SONAR_TOKEN', vaultKey: 'token']
                             ]]
                         ],
