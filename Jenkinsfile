@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Variables d'environnement non secrètes
-        REGISTRY_URL_NEXUS = '167.86.118.59:32772'
+        REGISTRY_URL_NEXUS = 'http://167.86.118.59:32772'
         REGISTRY_URL_JFROG = 'trial29h9yf.jfrog.io'
         APP_NAME = 'node-hello-world'
     }
