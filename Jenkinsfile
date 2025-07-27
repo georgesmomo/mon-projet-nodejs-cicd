@@ -103,10 +103,10 @@ pipeline {
                 try {
                     withVault([
                         vaultSecrets: [
-                            /*[path: 'secret/secret/devops/jfrog', engineVersion: 2, secretValues: [
+                            [path: 'secret/secret/devops/jfrog', engineVersion: 2, secretValues: [
                                 [envVar: 'JFROG_USER', vaultKey: 'user'],
                                 [envVar: 'JFROG_PASS', vaultKey: 'password']
-                            ]],*/
+                            ]],
                             [path: 'secret/secret/devops/nexus', engineVersion: 2, secretValues: [
                                 [envVar: 'NEXUS_USER', vaultKey: 'user'],
                                 [envVar: 'NEXUS_PASS', vaultKey: 'password']
@@ -122,7 +122,7 @@ pipeline {
                         echo "🔐 Secrets JFrog, Nexus et Docker Hub récupérés via Vault"
 
                         // --- JFrog Artifactory ---
-                        def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')[0]}:${env.IMAGE_FULL_NAME.split(':')[1]}"
+                        /*def jfrogImageName = "${env.REGISTRY_URL_JFROG}/${env.APP_NAME}/${env.IMAGE_FULL_NAME.split(':')[0]}:${env.IMAGE_FULL_NAME.split(':')[1]}"
                         echo "📦 JFrog Image Name: ${jfrogImageName}"
 
                         sh """
@@ -130,7 +130,7 @@ pipeline {
                             docker tag ${env.IMAGE_FULL_NAME} ${jfrogImageName}
                             docker push ${jfrogImageName}
                             docker logout ${env.REGISTRY_URL_JFROG}
-                        """
+                        """*/
 
 
                         // --- Docker Hub ---
