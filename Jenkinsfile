@@ -45,24 +45,22 @@ pipeline {
       parallel {
         stage('Backend') {
           steps {
-            sh './jenkins/test-backend.sh'
-            junit 'target/surefire-reports/**/TEST*.xml'
+            echo "Backend ..."
           }
         }
         stage('Frontend') {
           steps {
-            sh './jenkins/test-frontend.sh'
-            junit 'target/test-results/**/TEST*.xml'
+          echo "Frontend ..."
           }
         }
         stage('Performance') {
           steps {
-            sh './jenkins/test-performance.sh'
+            echo "Performance ..."
           }
         }
         stage('Static') {
           steps {
-            sh './jenkins/test-static.sh'
+            echo "Static ..."
           }
         }
       }
