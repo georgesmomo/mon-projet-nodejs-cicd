@@ -41,6 +41,32 @@ pipeline {
             }
         }
 
+   stage('Fluffy Test - TO_DELETE') {
+      parallel {
+        stage('Backend') {
+          steps {
+            sh './jenkins/test-backend.sh'
+            junit 'target/surefire-reports/**/TEST*.xml'
+          }
+        }
+        stage('Frontend') {
+          steps {
+            sh './jenkins/test-frontend.sh'
+            junit 'target/test-results/**/TEST*.xml'
+          }
+        }
+        stage('Performance') {
+          steps {
+            sh './jenkins/test-performance.sh'
+          }
+        }
+        stage('Static') {
+          steps {
+            sh './jenkins/test-static.sh'
+          }
+        }
+      }
+    }
 
     stage('SonarQube Analysis & Quality Gate') {
         steps {
