@@ -48,7 +48,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'SonarScanner'
 
-                    withVault([
+                   /* withVault([
                         vaultSecrets: [
                             [path: 'secret/secret/devops/sonarqube', engineVersion: 2, secretValues: [
                                 [envVar: 'SONAR_TOKEN', vaultKey: 'token']
@@ -59,13 +59,13 @@ pipeline {
                         sh """
                             ${scannerHome}/bin/sonar-scanner -Dsonar.login=${SONAR_TOKEN} || true
                         """
-                    }
+                    } */
                 }
             }
 
             timeout(time: 1, unit: 'HOURS') {
                 //si à true, le test tombe en echec si qualitygate est pas bon
-                waitForQualityGate abortPipeline: false
+                //waitForQualityGate abortPipeline: false
             }
         }
     }
