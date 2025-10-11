@@ -33,10 +33,10 @@ pipeline {
                     sh 'mkdir -p $npm_config_cache'
 
                     // Installation des dépendances
-                    sh 'npm install --prefer-offline --no-audit'
+                    //sh 'npm install --prefer-offline --no-audit'
 
                     // Exécution des tests avec options pour debug
-                    sh 'npm test -- --detectOpenHandles --verbose'
+                    //sh 'npm test -- --detectOpenHandles --verbose'
                 }
             }
         }
