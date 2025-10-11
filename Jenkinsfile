@@ -90,8 +90,8 @@ pipeline {
                 // Construire l'image Docker
                 docker.build(env.IMAGE_FULL_NAME, ".")
 
-                // Scanner l'image avec Trivy. --exit-code 1 fait échouer le build si des vulnérabilités sont trouvées.
-                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_FULL_NAME} || true"
+                // Scanner l'image avec Trivy. --exit-code 1 fait échouer le build si des vulnérabilités sont trouvées. et 0 non
+                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.IMAGE_FULL_NAME} || true"
             }
         }
     }
@@ -137,7 +137,7 @@ pipeline {
                         def dockerhubImageName = "${DOCKERHUB_USER}/${env.IMAGE_FULL_NAME}"
                         echo "📦 Docker Hub Image Name: ${dockerhubImageName}"
 
-                        sh """
+                      /*  sh """
                             echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin
                             docker tag ${env.IMAGE_FULL_NAME} ${dockerhubImageName}
                             docker push ${dockerhubImageName}
@@ -156,7 +156,7 @@ pipeline {
                             docker push ${nexusImageName}
                             docker logout ${env.REGISTRY_URL_NEXUS}
                         """
-
+                    */
                     }
 
                 } catch (Exception e) {
